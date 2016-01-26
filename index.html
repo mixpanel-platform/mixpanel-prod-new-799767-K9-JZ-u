@@ -5,11 +5,82 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/css/reset.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script>
+    <style type="text/css">
+    div {
+      float: left;
+    }
+
+    #download {
+      margin: 0 20px;
+      height: 32px;
+      width: auto;
+      font-size: 15px;
+      font-weight: bold;
+    }
+    </style>
   </head>
   <body class="mixpanel-platform-body">
-    <h1>Hello, World!</h1>
+    <script type="text/cq" id="cq">
+        function main() {
+            return Events({
+              from_date: params.from_date,
+              to_date: params.to_date
+            })
+              .filter(function(event){ return event.name == "approval" && (event.properties.$email || event.properties.utm_source) })
+              .map(function(event){
+                return [
+                  new Date(event.time).toLocaleDateString(),
+                  event.properties.$email,
+                  event.properties.utm_source || "undefined"
+                ]
+              })
+
+        }
+    </script>
     <script>
-      // Run queries and display results here
+      var platform = {};
+      platform.rawCSV = encodeURI("data:text/csv;charset=utf-8," + encodeURI(['time', 'email', 'utm_source'].join()));
+      platform.fileName = 'approval_results.csv'
+      platform.downloadCSV = function() {
+          var link = document.createElement("a");
+          link.setAttribute("href", platform.rawCSV);
+          link.setAttribute("download", platform.fileName);
+          link.click();
+          $(link).remove();
+      }
+
+      var cqScript = $.trim($('#cq').html());
+
+      platform.DateSorter = function(a,b) {
+        if (a[0] < b[0]) return 1;
+        if (a[0] > b[0]) return -1;
+        return 0;
+      }
+      platform.params = {}
+      platform.runQuery = function() {
+        MP.api.custom_query(cqScript, platform.params)
+          .done(function(data) {
+            data.sort(platform.DateSorter)
+            $.each(data, function(i, event){
+              platform.rawCSV += encodeURI("\n" + event.join())
+            })
+            platform.downloadCSV();
+          });
+      }
+
+
+      $(document).ready(function() {
+        var dateSelector = $('<div></div>').appendTo('body').MPDatepicker();
+        var downloadButton = $('<button id="download"> Download </button>').appendTo('body');
+        downloadButton.on("click", function(e){
+          e.preventDefault();
+          var dates = dateSelector.val()
+          platform.params.from_date = dates.from.toISOString().split('T')[0]
+          platform.params.to_date = dates.to.toISOString().split('T')[0]
+          console.log(platform.params)
+          platform.runQuery();
+        })
+      });
     </script>
   </body>
 </html>
