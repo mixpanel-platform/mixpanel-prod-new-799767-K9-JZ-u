@@ -26,8 +26,8 @@
               .filter(function(event){ return (event.name == "approval" || event.name =='denial') && (event.properties.$email || event.properties.utm_source) })
               .map(function(event){
                 return [
-                  event.name,
                   new Date(event.time).toLocaleDateString(),
+                  event.name,
                   event.properties.$email,
                   event.properties.utm_source || "undefined"
                 ]
@@ -37,7 +37,7 @@
     </script>
     <script>
       var platform = {};
-      platform.rawCSV = encodeURI("data:text/csv;charset=utf-8," + encodeURI(['event name','time', 'email', 'utm_source'].join()));
+      platform.rawCSV = encodeURI("data:text/csv;charset=utf-8," + encodeURI(['time','event_name', 'email', 'utm_source'].join()));
       platform.fileName = 'approval_results.csv'
       platform.downloadCSV = function() {
           var link = document.createElement("a");
