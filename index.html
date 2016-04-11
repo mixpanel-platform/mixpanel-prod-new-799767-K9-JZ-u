@@ -23,13 +23,14 @@
               from_date: params.from_date,
               to_date: params.to_date
             })
-              .filter(function(event){ return (event.name == "approval" || event.name =='denial') && (event.properties.$email || event.properties.utm_source) })
+              .filter(function(event){ return (event.name == "approval" || event.name =='denial') && (event.properties.$email || event.properties.utm_source || event.properties.utm_campaign) })
               .map(function(event){
                 return [
                   new Date(event.time).toLocaleDateString(),
                   event.name,
                   event.properties.$email,
-                  event.properties.utm_source || "undefined"
+                  event.properties.utm_source || "undefined",
+                  event.properties.utm_campaign || "undefined"
                 ]
               })
 
@@ -37,7 +38,7 @@
     </script>
     <script>
       var platform = {};
-      platform.rawCSV = encodeURI("data:text/csv;charset=utf-8," + encodeURI(['time','event_name', 'email', 'utm_source'].join()));
+      platform.rawCSV = encodeURI("data:text/csv;charset=utf-8," + encodeURI(['time','event_name', 'email', 'utm_source', 'utm_campaign'].join()));
       platform.fileName = 'approval_results.csv'
       platform.downloadCSV = function() {
           var link = document.createElement("a");
